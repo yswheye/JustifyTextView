@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">JustifyTextView</string>
+    <string name="content">假设我们是在画布Canvas的顶部绘制一行文字规定一行文字的高度是y文字区域的高度是HeightTOP和BOTTOM之间TOP到0和BOTTOM到y的距离相等这样文字才看起来是居中。因此0到y和TOP到BOTTOM的中线是重合的y轴坐标都是y/2。
+我们要绘制一行文字时设计必然会告诉我们0到y的距离所以中线的位置也是固定的y/2那么我们设置了Paint的文字大小后Ascent和Descent又能直接得到就可以算出中线到基线的距离公式如下
+基线到中线的距离ggg jjj=(Descent+Ascent)/2-Descent = Ascent-Descent)/2
+注意实际获取到的Ascent是负数。公式推导过程如下
+中线到BOTTOM的距离是(Descent+Ascent)/2这个距离又等于Descent+中线到基线的距离即(Descent+Ascent)/2=基线到中线的距离+Descent。</string>
+</resources>
