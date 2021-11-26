@@ -78,7 +78,7 @@ public class JustifyTextView extends AppCompatTextView {
                     line = line.substring(0, line.length() - 1) + "...";
                 }
             }
-            if (needScale(line) && i < lineCount - 1) {
+            if (needScale(line) && (maxLineLimit || i < lineCount - 1)) {
                 drawScaledText(canvas, line, width);
             } else {
                 canvas.drawText(line, 0, mLineY, mPaint);
