@@ -7,15 +7,18 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import androidx.appcompat.widget.AppCompatTextView;
 
 public class JustifyTextView extends AppCompatTextView {
+    private static final String TAG = "_haha";
     private float mLineY;
     private int mViewWidth;
     private float lineHeight;
     private TextPaint mPaint;
     private int lineCount;
+    //达到显示行
     private boolean maxLineLimit;
 
     public JustifyTextView(Context context, AttributeSet attrs) {
@@ -34,11 +37,19 @@ public class JustifyTextView extends AppCompatTextView {
         int textHeight = (int) (Math.ceil(fm.descent - fm.ascent));
         lineHeight = (int) (textHeight * layout.getSpacingMultiplier() + layout.getSpacingAdd());
         lineCount = layout.getLineCount();
+        Log.d(TAG, "onMeasure1: " + getMaxLines() + ", " + lineCount);
         //设置过maxLines属性
-        if (maxLineLimit = getMaxLines() != Integer.MAX_VALUE) {
+        if (getMaxLines() != Integer.MAX_VALUE && getMaxLines() <= lineCount) {
             lineCount = getMaxLines() - 1;
             setMaxLines(getMaxLines() + 1);
         }
+        /**
+         * 第二次测量后差1，表示maxLine大于或等于实际显示行数，可直接显示不需要处理end...
+         * 差2，表示maxLine小于实际显示行数，需要处理end...
+         */
+        int bad = getMaxLines() - lineCount;
+        maxLineLimit = bad == 2;
+        Log.d(TAG, "onMeasure2: " + getMaxLines() + ", " + lineCount + "， maxLineLimit = " + maxLineLimit);
         int viewHeight = (int) (lineHeight * lineCount - Math.ceil(fm.bottom - fm.leading));
         setMeasuredDimension(getMeasuredWidth(), viewHeight);
     }
@@ -62,6 +73,7 @@ public class JustifyTextView extends AppCompatTextView {
             String line = text.substring(lineStart, lineEnd);
             //处理ellipsize end ...
             if (maxLineLimit) {
+                Log.d(TAG, (i+1) + " lineCount = " + lineCount + ", line = " + line);
                 if (i == lineCount - 1 && line.length() > 2) {
                     line = line.substring(0, line.length() - 1) + "...";
                 }
