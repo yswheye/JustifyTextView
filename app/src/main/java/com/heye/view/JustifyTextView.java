@@ -18,8 +18,9 @@ public class JustifyTextView extends AppCompatTextView {
     private float lineHeight;
     private TextPaint mPaint;
     private int lineCount;
-    //达到显示行
-    private boolean maxLineLimit;
+    private boolean ellipsizeEnd;
+    private boolean measured;
+    private int maxLines = -1;
 
     public JustifyTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -36,20 +37,27 @@ public class JustifyTextView extends AppCompatTextView {
         Paint.FontMetrics fm = mPaint.getFontMetrics();
         int textHeight = (int) (Math.ceil(fm.descent - fm.ascent));
         lineHeight = (int) (textHeight * layout.getSpacingMultiplier() + layout.getSpacingAdd());
-        lineCount = layout.getLineCount();
-        Log.d(TAG, "onMeasure1: " + getMaxLines() + ", " + lineCount);
-        //设置过maxLines属性
-        if (getMaxLines() != Integer.MAX_VALUE && getMaxLines() <= lineCount) {
-            lineCount = getMaxLines() - 1;
-            setMaxLines(getMaxLines() + 1);
-        }
         /**
-         * 第二次测量后差1，表示maxLine大于或等于实际显示行数，可直接显示不需要处理end...
-         * 差2，表示maxLine小于实际显示行数，需要处理end...
+         * 设置过maxLines，先通过MAX_VALUE测量出实际全部显示内容的行数
          */
-        int bad = getMaxLines() - lineCount;
-        maxLineLimit = bad == 2;
-        Log.d(TAG, "onMeasure2: " + getMaxLines() + ", " + lineCount + "， maxLineLimit = " + maxLineLimit);
+        if (!measured && (getMaxLines() != Integer.MAX_VALUE || getMaxLines() != 0)) {
+            if (maxLines == -1) {
+                maxLines = getMaxLines();
+            }
+            measured = true;
+            setMaxLines(Integer.MAX_VALUE);
+            setMeasuredDimension(getMeasuredWidth(), getMeasuredHeight());
+            return;
+        }
+        //获取实际全部显示内容的行数
+        lineCount = layout.getLineCount();
+        Log.d(TAG, "onMeasure1: max = " + maxLines + ", lines = " + lineCount);
+        //设置过maxLines属性
+        if (maxLines != Integer.MAX_VALUE && maxLines < lineCount) {
+            ellipsizeEnd = true;
+            lineCount = maxLines;
+        }
+        Log.d(TAG, "onMeasure2: max = " + maxLines + ", lines = " + lineCount + "， ellipsizeEnd = " + ellipsizeEnd);
         int viewHeight = (int) (lineHeight * lineCount - Math.ceil(fm.bottom - fm.leading));
         setMeasuredDimension(getMeasuredWidth(), viewHeight);
     }
@@ -72,13 +80,13 @@ public class JustifyTextView extends AppCompatTextView {
             float width = StaticLayout.getDesiredWidth(text, lineStart, lineEnd, getPaint());
             String line = text.substring(lineStart, lineEnd);
             //处理ellipsize end ...
-            if (maxLineLimit) {
-                Log.d(TAG, (i+1) + " lineCount = " + lineCount + ", line = " + line);
+            if (ellipsizeEnd) {
                 if (i == lineCount - 1 && line.length() > 2) {
                     line = line.substring(0, line.length() - 1) + "...";
                 }
             }
-            if (needScale(line) && (maxLineLimit || i < lineCount - 1)) {
+            Log.d(TAG, (i+1) + " lineCount = " + lineCount + ", line = " + line + "，mLineY = " + mLineY);
+            if (needScale(line) && (ellipsizeEnd || i < lineCount - 1)) {
                 drawScaledText(canvas, line, width);
             } else {
                 canvas.drawText(line, 0, mLineY, mPaint);
